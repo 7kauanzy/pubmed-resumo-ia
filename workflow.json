@@ -1,0 +1,195 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "08582477-db36-4420-bc68-5494846ab715",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fef75f22-7563-4630-9aac-459340312353",
+              "name": "url",
+              "value": "https://pubmed.ncbi.nlm.nih.gov/35291645/",
+              "type": "string"
+            },
+            {
+              "id": "9f3d418e-a925-4044-9f9b-318d7ed42c46",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d16e449b-36d2-4189-a912-5d8eb07b5e10",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "46c0e8ee-9116-4784-ae11-05e1ea49226f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "titulo",
+              "cssSelector": "title"
+            },
+            {
+              "key": "abstract",
+              "cssSelector": "#eng-abstract"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "6a601d29-13f1-4d3b-9b16-0f9d95c7c689",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"llama-3.3-70b-versatile\",\n  messages: [\n    {\n      role: \"user\",\n      content: \"Resuma o seguinte estudo científico de forma estruturada em português:\\n\\nTítulo: \" + $json.titulo + \"\\n\\nResumo original: \" + $json.abstract + \"\\n\\nOrganize sua resposta em:\\n1. Metodologia (resumida)\\n2. Principal achado\\n3. Aplicação prática para treino de hipertrofia\"\n    }\n  ]\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "f372b632-3410-4db7-ab96-e2b808d53af7",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jDvwdHN5aqg2gzoC",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6140cea-d530-45ff-8461-e339adecb112",
+              "name": "resumo",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "cf552261-e83d-426d-9fb9-a8107d2699f8",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e46903464e4dba215a255292d2bc70f310e6d1dd50ec2c5879c1a3f718a7c590"
+  }
+}
